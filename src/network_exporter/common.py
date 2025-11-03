@@ -1,18 +1,7 @@
-from enum import Enum
 from ipaddress import IPv4Address
 from typing import Dict
 
 from pydantic import BaseModel, ConfigDict, ValidationInfo, computed_field, field_validator
-
-
-class CiscoInterfaceSide(Enum):
-    A = "a"
-    B = "b"
-
-
-class CiscoInterfaceType(Enum):
-    Service = "service"
-    Member = "member"
 
 
 class CiscoInterface(BaseModel):
@@ -34,16 +23,6 @@ class CiscoInterface(BaseModel):
     def description_structured(self) -> Dict:
         # splits "#/env:uat/side:a/type:service/name:transit/"
         return dict(i.split(":") for i in self.description.split("/")[1:-1])
-
-    @computed_field
-    @property
-    def type(self) -> CiscoInterfaceType:
-        return CiscoInterfaceType(self.description_structured["type"])
-
-    @computed_field
-    @property
-    def side(self) -> CiscoInterfaceSide:
-        return CiscoInterfaceSide(self.description_structured["side"])
 
     @computed_field
     @property
