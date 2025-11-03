@@ -19,11 +19,10 @@ from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 
-from network_exporter.common import CiscoInterface, CiscoInterfaceType
 from network_exporter.connection import CiscoConnection, PanosConnection
 from network_exporter.exceptions import ParseException
 from network_exporter.parsers import CiscoParser, PanosParser
-from network_exporter.registries import CiscoPingRegistry, CiscoRegistry, PanosRegistry
+from network_exporter.registries import CiscoRegistry, PanosRegistry
 from network_exporter.templates import CiscoTemplates
 
 logger = logging.getLogger("uvicorn.error")
@@ -45,7 +44,6 @@ async def lifespan(app: FastAPI):
             raise RuntimeError(f"Required envvars `{var}` is not set.")
 
     app.state.cisco_connections = {}
-    app.state.cisco_ping_connections = {}
     yield
     logger.info("Shutting down...")
 
@@ -303,52 +301,6 @@ def _render_cisco(request: Request, connection: CiscoConnection):
     return generate_latest(registry)
 
 
-def _render_cisco_ping(request: Request, connection: CiscoConnection):
-    registry = CiscoPingRegistry()
-    # Collect device hostname using `show version`
-    show_version = connection.send_command("show version")
-    podname = socket.gethostname()
-    logger.info(
-        "%s:%s - `show version` parsed output %s",
-        request.client.host,
-        request.client.port,
-        json.dumps(show_version),
-    )
-    assert "show_version", "Failure fetching or parsing `show version`"
-    hostname = show_version[0]["hostname"]
-
-    intr_status_output = connection.send_command("show interface", use_textfsm=False)
-    intr_status_tmpl = textfsm.TextFSM(CiscoTemplates.show_interface)
-    intr_status_parsed = intr_status_tmpl.ParseTextToDicts(intr_status_output)
-    intr_status = [{k.lower(): v for k, v in r.items()} for r in intr_status_parsed]
-    # Filter out tunnel interfaces
-    tunnels = [CiscoInterface(**intr) for intr in intr_status if intr["interface"].startswith("Tunnel")]
-    # Filter out ServiceTunnels from all Tunnel interfaces
-    service_tunnels = [
-        tunnel for tunnel in tunnels if tunnel.type == CiscoInterfaceType.Service and tunnel.name != "transit"
-    ]
-
-    for service_tunnel in service_tunnels:
-        ping_cmd = f"ping vrf {service_tunnel.vrf} ip {service_tunnel.gre_remote_address} source {service_tunnel.interface} repeat 3"
-        connection.find_prompt()
-        out = connection.send_command(ping_cmd, use_textfsm=True)
-        registry.cisco_service_tunnel_ping_success_pct.labels(
-            **{
-                "hostname": hostname,
-                "interface": service_tunnel.interface,
-                "service": service_tunnel.name,
-                "ipaddress": service_tunnel.gre_remote_address,
-            }
-        ).set(out[0]["success_pct"])
-        logger.info(
-            f"Ping results for {service_tunnel.name}/{service_tunnel.interface}/{service_tunnel.gre_remote_address} : {out}"
-        )
-    registry.cisco_connection_established_timestamp.labels(
-        **{"hostname": hostname, "podname": podname, "module": "cisco-ping"}
-    ).set(connection.established_time)
-    return generate_latest(registry)
-
-
 @app.get("/probe")
 def probe(module: str, target: IPv4Address, request: Request):
     match module:
@@ -364,16 +316,7 @@ def probe(module: str, target: IPv4Address, request: Request):
                 content=_render_cisco(request, app.state.cisco_connections[target]),
                 media_type=CONTENT_TYPE_LATEST,
             )
-        case "cisco-ping":
-            if target not in app.state.cisco_ping_connections:
-                app.state.cisco_ping_connections[target] = CiscoConnection(
-                    username=os.environ["CISCO_USERNAME"], password=os.environ["CISCO_PASSWORD"], device=target
-                )
-            return Response(
-                content=_render_cisco_ping(request, app.state.cisco_ping_connections[target]),
-                media_type=CONTENT_TYPE_LATEST,
-            )
         case _:
             return Response(
-                status_code=400, content="Invalid request. Available modules are `panos`, `cisco` or `cisco-ping`"
+                status_code=400, content="Invalid request. Available modules are `panos` or `cisco`"
             )

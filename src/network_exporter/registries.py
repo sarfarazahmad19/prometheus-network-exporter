@@ -1,23 +1,6 @@
 from prometheus_client import CollectorRegistry, Gauge
 
 
-class CiscoPingRegistry(CollectorRegistry):
-    def __init__(self):
-        super().__init__()
-        self.cisco_service_tunnel_ping_success_pct = Gauge(
-            "cisco_service_tunnel_ping_success_pct",
-            "Gauge for success_pct of ping from cisco interface to service gre.",
-            ["hostname", "interface", "service", "ipaddress"],
-            registry=self,
-        )
-        self.cisco_connection_established_timestamp = Gauge(
-            "cisco_connection_timestamp",
-            "Gauge - timestamp when ssh connection was last established",
-            ["hostname", "podname", "module"],
-            registry=self,
-        )
-
-
 class CiscoRegistry(CollectorRegistry):
     def __init__(self):
         super().__init__()
