@@ -10,79 +10,79 @@ class CiscoRegistry(CollectorRegistry):
         self.cisco_system_resource_metric = Gauge(
             "cisco_system_resource",
             "Gauge for various system resources cpu, mem_used, mem_free",
-            ["type", "hostname"],
+            ["hostname"],
             registry=self,
         )
         self.cisco_interface_oper_status = Gauge(
             "interface_oper_status",
             "Gauge for interface status, whether up(1) or down(0)",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_admin_status = Gauge(
             "interface_admin_status",
             "Gauge representating if Interface's are *admin* up(1) or down(0)",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_input_packets = Gauge(
             "interface_input_packets",
             "Gauge counting input packets",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_output_packets = Gauge(
             "interface_output_packets",
             "Gauge counting output packets",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_input_errors = Gauge(
             "interface_input_errors",
             "Gauge counting input packet errors",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_output_errors = Gauge(
             "interface_output_errors",
             "Gauge counting output packet errors",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_input_rate = Gauge(
             "interface_input_rate_bps",
             "Gauge representing 5 min input rate from show interfaces",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_output_rate = Gauge(
             "interface_output_rate_bps",
             "Gauge representing 5 min output rate from show interfaces",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_input_drops = Gauge(
             "interface_input_drops",
             "Gauge counting input packet drops",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_output_drops = Gauge(
             "interface_output_drops",
             "Gauge counting output packet drops",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_qos_bps = Gauge(
             "interface_qos_bps",
             "Gauge QoS limit on the interface",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname"],
+            ["interface", "ipaddress", "description", "name", "hostname"],
             registry=self,
         )
         self.cisco_interface_qos_policy_name = Gauge(
             "interface_qos_policy_name",
             "Gauge QoS limit on the interface",
-            ["interface", "ipaddress", "description", "side", "type", "name", "hostname", "classmap"],
+            ["interface", "ipaddress", "description", "name", "hostname", "classmap"],
             registry=self,
         )
         self.cisco_connection_established_timestamp = Gauge(
